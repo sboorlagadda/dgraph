@@ -6,11 +6,12 @@ source $contrib/scripts/functions.sh
 SRC="$( cd -P "$( dirname "${BASH_SOURCE[0]}" )" && pwd )/.."
 
 BUILD=$1
-echo -e "BUILD $BUILD"
 # If build variable is empty then we set it.
 if [ -z "$1" ]; then
   BUILD=$SRC/build
 fi
+
+mkdir -p $BUILD
 
 set -e
 
