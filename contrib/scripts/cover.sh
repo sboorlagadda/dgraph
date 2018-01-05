@@ -21,7 +21,7 @@ set -e
 # create coverage output
 echo 'mode: atomic' > $OUT
 for PKG in $(go list ./...|grep -v -E 'vendor|contrib|wiki|customtok'); do
-  go test -v -race -covermode=atomic -coverprofile=$TMP $PKG
+  go test -v -race -covermode=atomic -coverprofile=$TMP $PKG | go-test-teamcity
   tail -n +2 $TMP >> $OUT
 done
 
