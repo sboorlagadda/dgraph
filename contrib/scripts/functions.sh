@@ -39,7 +39,7 @@ function start {
 function startZero {
   pushd dgraph &> /dev/null
   echo -e "\nBuilding Dgraph."
-  go build -race .
+  go build .
 	echo -e "Starting dgraph zero.\n"
   ./dgraph zero -w $BUILD/wz &
   # To ensure dgraph doesn't start before dgraphzero.
