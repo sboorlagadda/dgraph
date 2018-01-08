@@ -24,7 +24,7 @@ for PKG in $(go list ./...|grep -v -E 'vendor|contrib|wiki|customtok'); do
   if [[ "$TRAVIS" == true ]]; then
     go test -v -covermode=atomic -coverprofile=$TMP $PKG
   else
-    go test -v -race -timeout 15m -covermode=atomic -coverprofile=$TMP $PKG | go-test-teamcity
+    go test -v -race -timeout 25m -covermode=atomic -coverprofile=$TMP $PKG | go-test-teamcity
   fi
   tail -n +2 $TMP >> $OUT
 done
