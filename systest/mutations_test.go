@@ -13,6 +13,7 @@ import (
 	"github.com/dgraph-io/dgraph/client"
 	"github.com/dgraph-io/dgraph/protos/api"
 	"github.com/stretchr/testify/require"
+	"log"
 )
 
 func TestSystem(t *testing.T) {
@@ -856,3 +857,4 @@ func SetAfterDeletionListType(t *testing.T, c *client.Dgraph) {
 	require.NoError(t, err)
 	require.Equal(t, `{"me":[{"property.test":["rewritten value"]}]}`, string(resp.Json))
 }
+

@@ -21,11 +21,18 @@ type DgraphCluster struct {
 	dgraphPortOffset int
 	zeroPortOffset   int
 
-	dir    string
+	binPath string
+	dir     string
+
 	zero   *exec.Cmd
 	dgraph *exec.Cmd
 
 	client *client.Dgraph
+}
+
+type DgraphClusterV struct {
+	version string
+	*DgraphCluster
 }
 
 func NewDgraphCluster(dir string) *DgraphCluster {
@@ -37,11 +44,56 @@ func NewDgraphCluster(dir string) *DgraphCluster {
 		dgraphPortOffset: do,
 		zeroPortOffset:   zo,
 		dir:              dir,
+		binPath:		  "$GOPATH/bin/",
 	}
 }
 
+func NewDgraphClusterV(versionTag string, verPath string, dir string) (*DgraphClusterV, error) {
+	do := freePort(x.PortGrpc)
+	zo := freePort(7080)
+
+	cluster := &DgraphClusterV{versionTag,
+		&DgraphCluster{
+			dgraphPort:       strconv.Itoa(do + x.PortGrpc),
+			zeroPort:         strconv.Itoa(zo + 7080),
+			dgraphPortOffset: do,
+			zeroPortOffset:   zo,
+			dir:              dir,
+			binPath:		  verPath + "/bin/",
+		},
+	}
+
+	if err := os.Setenv("GOPATH", verPath); err != nil {
+		return nil, err
+	}
+
+	cmd := exec.Command("go", "get", "-d",  "-u",  "-v", "-t", "github.com/dgraph-io/dgraph/...")
+	cmd.Env = os.Environ()
+	cmd.Env = append(cmd.Env, "GOPATH="+verPath)
+	if err := cmd.Start(); err != nil {
+		return nil, err
+	}
+
+	cmd = exec.Command("git", "checkout", "tags/" + versionTag + " -b" + versionTag)
+	cmd.Dir = verPath + "/src/github.com/dgraph-io/dgraph"
+	cmd.Env = os.Environ()
+	cmd.Env = append(cmd.Env, "GOPATH="+verPath)
+	if err := cmd.Start(); err != nil {
+		return nil, err
+	}
+
+	cmd = exec.Command("go install github.com/dgraph-io/dgraph")
+	cmd.Env = os.Environ()
+	cmd.Env = append(cmd.Env, "GOPATH="+verPath)
+	if err := cmd.Start(); err != nil {
+		return nil, err
+	}
+
+	return cluster, nil
+}
+
 func (d *DgraphCluster) StartZeroOnly() error {
-	d.zero = exec.Command(os.ExpandEnv("$GOPATH/bin/dgraph"),
+	d.zero = exec.Command(d.binPath+"/dgraph",
 		"zero",
 		"-w=wz",
 		"-o", strconv.Itoa(d.zeroPortOffset),
@@ -65,7 +117,7 @@ func (d *DgraphCluster) Start() error {
 		return err
 	}
 
-	d.dgraph = exec.Command(os.ExpandEnv("$GOPATH/bin/dgraph"),
+	d.dgraph = exec.Command(os.ExpandEnv(d.binPath+"dgraph"),
 		"server",
 		"--memory_mb=4096",
 		"--zero", ":"+d.zeroPort,
@@ -102,7 +154,7 @@ type Node struct {
 
 func (d *DgraphCluster) AddNode(dir string) (Node, error) {
 	o := strconv.Itoa(freePort(x.PortInternal))
-	dgraph := exec.Command(os.ExpandEnv("$GOPATH/bin/dgraph"),
+	dgraph := exec.Command(os.ExpandEnv(d.binPath+"dgraph"),
 		"server",
 		"--memory_mb=4096",
 		"--zero", ":"+d.zeroPort,
