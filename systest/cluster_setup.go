@@ -68,6 +68,8 @@ func NewDgraphClusterV(versionTag string, verPath string, dir string) (*DgraphCl
 	}
 
 	cmd := exec.Command("go", "get", "-d",  "-u",  "-v", "-t", "github.com/dgraph-io/dgraph/...")
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, "GOPATH="+verPath)
 	if err := cmd.Start(); err != nil {
@@ -82,7 +84,7 @@ func NewDgraphClusterV(versionTag string, verPath string, dir string) (*DgraphCl
 		return nil, err
 	}
 
-	cmd = exec.Command("go install github.com/dgraph-io/dgraph")
+	cmd = exec.Command("go", "install" , "github.com/dgraph-io/dgraph/dgraph")
 	cmd.Env = os.Environ()
 	cmd.Env = append(cmd.Env, "GOPATH="+verPath)
 	if err := cmd.Start(); err != nil {
